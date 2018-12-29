@@ -204,6 +204,77 @@ class GriftKitTests: XCTestCase {
         XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Int"))
     }
 
+    func testDictionaryWithoutWhitespace() throws {
+        let code = "class Thing { var x: [String:Int] }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 4)
+        XCTAssertEqual(graph.edgeCount, 3)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Dictionary"))
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "String"))
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Int"))
+    }
+
+    func testMultidimensionalArray() throws {
+        let code = "class Thing { var x: [[[[FooBarBaz]]]] }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 3)
+        XCTAssertEqual(graph.edgeCount, 2)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Array"))
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "FooBarBaz"))
+    }
+
+    func testTuple() throws {
+        let code = "class Thing { var x: (foo: Foo, bar: Bar, baz: Baz) }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 4)
+        XCTAssertEqual(graph.edgeCount, 3)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Foo"))
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Bar"))
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Baz"))        
+    }
+    
+    func testEscapingClosure() throws {
+        let code = "class Thing { func foo(bar: @escaping () -> Baz) {} }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 2)
+        XCTAssertEqual(graph.edgeCount, 1)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "Baz"))
+    }
+
+    func testOptional() throws {
+        let code = "class Thing { var x: String? }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 2)
+        XCTAssertEqual(graph.edgeCount, 1)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "String"))
+    }
+
+    func testImplicitlyUnwrapped() throws {
+        let code = "class Thing { var x: String! }"
+
+        let graph = try buildGraph(for: code)
+
+        XCTAssertEqual(graph.vertexCount, 2)
+        XCTAssertEqual(graph.edgeCount, 1)
+
+        XCTAssertTrue(graph.edgeExists(from: "Thing", to: "String"))
+    }
+
 //    func testStructWithFunctionShowsFunctionReturnTypeProperly() throws {
 //        let code = "struct Thing { func foo() -> Double { return 0 } }"
 //
