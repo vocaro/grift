@@ -13,10 +13,10 @@ public enum GraphBuilder {
         return graph
     }
 
-    public static func build(structures: [Structure]) -> UnweightedGraph<Vertex> {
+    public static func build(structures: [Structure], excluding regex: NSRegularExpression? = nil) -> UnweightedGraph<Vertex> {
         let graph = UnweightedGraph<Vertex>()
         for structure in structures {
-            populate(graph: graph, from: structure.dictionary)
+            populate(graph: graph, from: structure.dictionary, excluding: regex)
         }
         return graph
     }
@@ -29,12 +29,15 @@ public enum GraphBuilder {
         return graph
     }
 
-    private static func populate(graph: UnweightedGraph<Vertex>, from dict: [String: SourceKitRepresentable], forVertexNamed name: String = "") {
+    private static func populate(graph: UnweightedGraph<Vertex>, from dict: [String: SourceKitRepresentable], forVertexNamed name: String = "", excluding regex: NSRegularExpression? = nil) {
 
         var name = name
 
         if let typeName = dict[.typeName] as? String, !name.isEmpty {
             for singleTypeName in normalize(typeWithName: typeName) {
+                guard !isExcluded(singleTypeName, regex: regex) else {
+                    continue
+                }
                 graph.addVertextIfNotPresent(singleTypeName)
                 graph.addEdgeIfNotPresent(from: name, to: singleTypeName, directed: true)
             }
@@ -47,7 +50,7 @@ public enum GraphBuilder {
 
         if let substructures = dict[.substructure] as? [SourceKitRepresentable] {
             for case let substructureDict as [String: SourceKitRepresentable] in substructures {
-                populate(graph: graph, from: substructureDict, forVertexNamed: name)
+                populate(graph: graph, from: substructureDict, forVertexNamed: name, excluding: regex)
             }
         }
     }
@@ -75,5 +78,15 @@ public enum GraphBuilder {
         return name.unicodeScalars.split(whereSeparator: {
             return separatorCharacters.contains($0)
         }).map({ String($0).trimmingCharacters(in: CharacterSet.whitespaces) })
+    }
+
+    private static func isExcluded(_ name: String, regex: NSRegularExpression?) -> Bool {
+        guard let regex = regex else {
+            return false
+        }
+        
+        let range = NSRange(name.startIndex..., in: name)
+        let firstMatch = regex.rangeOfFirstMatch(in: name, range: range)
+        return firstMatch.location != NSNotFound
     }
 }
