@@ -8,3 +8,13 @@ Grift is in its very early stages. There are many scenarios it does not account 
 To play with what's there, you can simply run `swift run` to run grift in its own directory, or `swift run grift dependencies --path {your-path-here}` to specify your own location. The output will be in the graphviz dot format to standard output, which you can generate an image with using graphviz
 
 For a rough idea of what this tool may become, check out the [roadmap](roadmap.md).
+
+## Excludes
+
+Grift can exclude types that may be irrelevant to the visualization, such as Foundation classes. The exclusion must be expressed as a regular expression, such as `^UI.*`. Be sure to use anchors when needed: `Set` will match both `Set` and `OptionSet`, but `^Set$` will match only `Set`.
+
+To specify exclusions, use the `excludes` parameter with a list of regular expressions separated by commas. Example: `--excludes ^Clock$,^NS.*`
+
+Grift provides a set of common types that can be excluded with a single parameter: `--defaultExcludes`
+
+If `--excludes` and `--defaultExcludes` parameters are both provided, they will be combined.
